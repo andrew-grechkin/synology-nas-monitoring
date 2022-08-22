@@ -1,0 +1,45 @@
+---
+version: '3'
+
+services:
+  influxdb2:  # https://hub.docker.com/_/influxdb
+    image: docker.io/library/influxdb:latest
+    container_name: influxdb2
+    hostname: influxdb2
+    restart: unless-stopped
+    ports:
+      - 8086:8086
+    env_file:
+      - ./volume/influxdb2.env
+    volumes:
+      - ./volume/influxdb/etc/influxdb2:/etc/influxdb2
+      - ./volume/influxdb/var/lib/influxdb2:/var/lib/influxdb2
+
+  telegraf:  # https://hub.docker.com/_/telegraf
+    image: docker.io/library/telegraf:latest
+    container_name: telegraf
+    hostname: telegraf
+    privileged: true
+    restart: unless-stopped
+    links:
+      - influxdb2
+    environment:
+      - MIBDIRS=/synology/mibs:/usr/share/snmp/mibs
+    volumes:
+      - ./3rdparty/net-snmp/mibs:/usr/share/snmp/mibs:ro
+      - ./volume/telegraf/etc/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - ./volume/telegraf/synology/mibs:/synology/mibs:ro
+
+  grafana:  # https://hub.docker.com/r/grafana/grafana
+    image: docker.io/grafana/grafana:latest
+    container_name: grafana
+    hostname: grafana
+    restart: unless-stopped
+    links:
+      - influxdb2
+    environment:
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    ports:
+      - 3000:3000
+    volumes:
+      - ./volume/grafana:/var/lib/grafana

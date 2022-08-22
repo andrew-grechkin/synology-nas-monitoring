@@ -1,0 +1,3 @@
+[submodule "3rdparty/net-snmp"]
+	path = 3rdparty/net-snmp
+	url = https://github.com/net-snmp/net-snmp.git
